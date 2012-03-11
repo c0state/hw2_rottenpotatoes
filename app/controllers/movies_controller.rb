@@ -7,25 +7,41 @@ class MoviesController < ApplicationController
   end
 
   def get_all_ratings
-    all_ratings = []
+    all_ratings = {}
     Movie.all(:select  => 'distinct(rating)', :order => 'rating').each { |elem|
-      all_ratings << elem.rating 
+      all_ratings[elem.rating] = 1
     }
     all_ratings
   end
   
   def get_checked_ratings
-    return params[:ratings].keys if params[:ratings]
-    return params[:checked_ratings] if params[:checked_ratings]
+    return params[:ratings] if params[:ratings]
     return get_all_ratings
+  end
+
+  def save_params_in_session
+    session[:sort_by] = params[:sort_by] if params[:sort_by]
+    session[:ratings] = params[:ratings] if params[:ratings]
+  end
+  
+  def restore_params_from_session
+    restored = false
+    params[:ratings] = session[:ratings] and (restored = true) if session[:ratings] and !params[:ratings]
+    params[:sort_by] = session[:sort_by] and (restored = true) if session[:sort_by] and !params[:sort_by]
+    restored
   end
 
   def index
     @all_ratings = get_all_ratings
-    @checked_ratings = get_checked_ratings
+    @ratings = get_checked_ratings
     @sort_by = params[:sort_by]
 
-    @movies = Movie.find(:all, :conditions => ['rating in (?)', @checked_ratings], :order => @sort_by)
+    save_params_in_session
+    if restore_params_from_session
+      redirect_to params
+    end
+
+    @movies = Movie.find(:all, :conditions => ['rating in (?)', @ratings.keys], :order => @sort_by)
   end
 
   def new
