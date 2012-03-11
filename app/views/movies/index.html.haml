@@ -3,10 +3,18 @@
 
 %table#movies
   %thead
+    = form_tag movies_path, :method => :get do
+      Include: 
+      - @all_ratings.each do |rating|
+        = rating
+        = check_box_tag "ratings[#{rating}]", value = 0, checked = (@checked_ratings.find_index(rating) ? true : false)
+      = hidden_field_tag('sort_by', @sort_by) if @sort_by
+      = submit_tag 'Refresh', :id => 'ratings_submit'
+
     %tr
-      %th Movie Title
+      %th#title_header{:class => ('hilite' if @sort_by == 'title')}= link_to 'Movie Title', { :controller => :movies, :action => :index, :sort_by => :title, :checked_ratings => @checked_ratings }
       %th Rating
-      %th Release Date
+      %th#release_date_header{:class => ('hilite' if @sort_by == 'release_date')}= link_to 'Release Date', { :controller => :movies, :action => :index, :sort_by => :release_date, :checked_ratings => @checked_ratings }
       %th More Info
   %tbody
     - @movies.each do |movie|

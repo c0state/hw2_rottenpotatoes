@@ -6,8 +6,26 @@ class MoviesController < ApplicationController
     # will render app/views/movies/show.<extension> by default
   end
 
+  def get_all_ratings
+    all_ratings = []
+    Movie.all(:select  => 'distinct(rating)', :order => 'rating').each { |elem|
+      all_ratings << elem.rating 
+    }
+    all_ratings
+  end
+  
+  def get_checked_ratings
+    return params[:ratings].keys if params[:ratings]
+    return params[:checked_ratings] if params[:checked_ratings]
+    return get_all_ratings
+  end
+
   def index
-    @movies = Movie.all
+    @all_ratings = get_all_ratings
+    @checked_ratings = get_checked_ratings
+    @sort_by = params[:sort_by]
+
+    @movies = Movie.find(:all, :conditions => ['rating in (?)', @checked_ratings], :order => @sort_by)
   end
 
   def new
